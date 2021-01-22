@@ -17,7 +17,7 @@ from keras.optimizers import Adam, SGD
 from keras_applications import resnet50, vgg19, nasnet, mobilenet_v2
 import tensorflow as tf
 
-from classification_models.keras import Classifiers
+# from classification_models.keras import Classifiers
 
 train_path = os.path.join('data', 'train2014')
 debug = True
@@ -50,7 +50,8 @@ parser.add_argument('--checkpoint-iterations', type=int, default=20, help='Check
 # For VGG19
 parser.add_argument('--content-weight', type=float, default=15.0, help='Content weight')
 # parser.add_argument('--style-weight', type=float, default=400.0, help='Style weight')
-parser.add_argument('--style-weight', type=float, default=300.0, help='Style weight')
+parser.add_argument('--style-weight', type=float, default=400.0, help='Style weight')
+# parser.add_argument('--style-weight', type=float, default=500.0, help='Style weight')
 # For Resnet18
 # parser.add_argument('--content-weight', type=float, default=15.0*100, help='Content weight')
 # parser.add_argument('--style-weight', type=float, default=100.0*100000000/4, help='Style weight')
@@ -59,8 +60,8 @@ parser.add_argument('--style-weight', type=float, default=300.0, help='Style wei
 # parser.add_argument('--content-weight', type=float, default=15.0, help='Content weight')
 # parser.add_argument('--style-weight', type=float, default=100.0, help='Style weight')
 parser.add_argument('--tv-weight', type=float, default=200.0, help='Total variation regularization weight')
-# parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
 parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
+# parser.add_argument('--lr', type=float, default=0.0015, help='Learning rate')
 args = parser.parse_args()
 
 makedirs(args.checkpoint_dir)
@@ -123,22 +124,67 @@ model = vgg19.VGG19(weights='imagenet', include_top=False, backend=keras.backend
 model = Model(model.input, model.layers[-2].output)
 model.summary()
 
-x = Conv2D(32, 9, strides=(1, 1), padding='same', activation='relu')(model.input)
-x = Conv2D(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
-x = Conv2D(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2D(32, 9, strides=(1, 1), padding='same', activation='relu')(model.input)
+# x = Conv2D(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2D(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
 # x = Conv2D(256, 3, strides=(2, 2), padding='same', activation='relu')(x)
- # Residual blocks
-x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
-x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
-x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
-# x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
-# x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# # x = Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x)
 # x = Conv2DTranspose(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
-x = Conv2DTranspose(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
-x = Conv2DTranspose(32, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2DTranspose(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2DTranspose(32, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# transform_output = Conv2D(3, 9, strides=(1, 1), padding='same', activation='sigmoid')(x)# * 150 + 255.0/2
+# print(model.input, transform_output)
+# transform_model = Model(model.input, transform_output)
+# transform_model.summary()
+
+x = Conv2D(32, 9, strides=(1, 1), padding='same', activation='relu')(model.input)
+x = Conv2D(64, 7, strides=(2, 2), padding='same', activation='relu')(x)
+x = Conv2D(128, 5, strides=(2, 2), padding='same', activation='relu')(x)
+x = Conv2D(256, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x)
+x = Conv2DTranspose(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
+x = Conv2DTranspose(64, 5, strides=(2, 2), padding='same', activation='relu')(x)
+x = Conv2DTranspose(32, 7, strides=(2, 2), padding='same', activation='relu')(x)
 transform_output = Conv2D(3, 9, strides=(1, 1), padding='same', activation='sigmoid')(x)# * 150 + 255.0/2
 print(model.input, transform_output)
 transform_model = Model(model.input, transform_output)
+transform_model.summary()
+
+# x = Conv2D(32, 9, strides=(1, 1), padding='same', activation='relu')(model.input)
+# x = Conv2D(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2D(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2D(256, 3, strides=(2, 2), padding='same', activation='relu')(x)
+#  # Residual blocks
+# x = Add()([x, Conv2D(256, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Add()([x, Conv2D(256, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Add()([x, Conv2D(256, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Add()([x, Conv2D(256, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Add()([x, Conv2D(256, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(256, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Conv2DTranspose(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2DTranspose(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2DTranspose(32, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# transform_output = Conv2D(3, 9, strides=(1, 1), padding='same', activation='sigmoid')(x)# * 150 + 255.0/2
+# print(model.input, transform_output)
+# transform_model = Model(model.input, transform_output)
+# transform_model.summary()
+
+
+# x = Conv2D(32, 9, strides=(1, 1), padding='same', activation='relu')(model.input)
+# x = Conv2D(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2D(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# # x = Conv2D(256, 3, strides=(2, 2), padding='same', activation='relu')(x)
+#  # Residual blocks
+# x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# # x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# # x = Add()([x, Conv2D(128, 3, strides=(1, 1), padding='same', activation='linear')(Conv2D(128, 3, strides=(1, 1), padding='same', activation='relu')(x))])
+# # x = Conv2DTranspose(128, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2DTranspose(64, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# x = Conv2DTranspose(32, 3, strides=(2, 2), padding='same', activation='relu')(x)
+# transform_output = Conv2D(3, 9, strides=(1, 1), padding='same', activation='sigmoid')(x)# * 150 + 255.0/2
+# print(model.input, transform_output)
+# transform_model = Model(model.input, transform_output)
 
 
 style_features = {}
@@ -165,7 +211,8 @@ l2_loss = lambda x: K.sum(K.square(x))
 
 content_model = Model(inputs=model.input, outputs=model.get_layer(content_layer).output)
 pred_output = content_model(preds_pre)
-content_output = content_model(content_input)
+content_pre = vgg19.preprocess_input(content_input, backend=keras.backend, layers=keras.layers, models=keras.models, utils=keras.utils)
+content_output = content_model(content_pre)
 content_size = K.cast(K.prod(K.shape(content_output)), 'float32')
 content_loss = args.content_weight * l2_loss(pred_output - content_output) / content_size
 
@@ -206,21 +253,27 @@ for layer in style_layers:
 # style_loss = args.style_weight * K.sum(style_losses) / batch_size
 style_loss = args.style_weight * style_loss / batch_size
 
-# tv_y_size = K.cast(K.prod(K.shape(preds[:,1:,:,:])), 'float32')
-# tv_x_size = K.cast(K.prod(K.shape(preds[:,:,1:,:])), 'float32')
-# y_tv = l2_loss(preds[:,1:,:,:] - preds[:,:batch_shape[1]-1,:,:])
-# x_tv = l2_loss(preds[:,:,1:,:] - preds[:,:,:batch_shape[2]-1,:])
-# tv_loss = args.tv_weight*(x_tv/tv_x_size + y_tv/tv_y_size)/batch_size
+# # tv_y_size = K.cast(K.prod(K.shape(preds[:,1:,:,:])), 'float32')
+# # tv_x_size = K.cast(K.prod(K.shape(preds[:,:,1:,:])), 'float32')
+y1, y2, y3, y4 = K.shape(preds)
+tv_y_size = K.cast(y1*(y2-1)*y3*y4, 'float32')
+tv_x_size = K.cast(y1*y2*(y3-1)*y4, 'float32')
+y_tv = l2_loss(preds[:,1:,:,:] - preds[:,:batch_shape[1]-1,:,:])
+x_tv = l2_loss(preds[:,:,1:,:] - preds[:,:,:batch_shape[2]-1,:])
+tv_loss = args.tv_weight*(x_tv/tv_x_size + y_tv/tv_y_size)/batch_size
 
-# loss = content_loss + style_loss + tv_loss
-loss = content_loss + style_loss
+loss = content_loss + style_loss + tv_loss
+# loss = content_loss + style_loss
 
 adam = Adam(lr=args.lr)
 # sgd = SGD(lr=args.lr, momentum=0.9, nesterov=True)
 param_updates = adam.get_updates(params=transform_model.trainable_weights, loss=loss)
-# train_batch = K.function(inputs=[K.learning_phase(), content_input], outputs=[loss, content_loss, style_loss, tv_loss], updates=param_updates)
-train_batch = K.function(inputs=[K.learning_phase(), content_input], outputs=[loss, content_loss, style_loss], updates=param_updates)
+train_batch = K.function(inputs=[K.learning_phase(), content_input], outputs=[loss, content_loss, style_loss, tv_loss], updates=param_updates)
+# train_batch = K.function(inputs=[K.learning_phase(), content_input], outputs=[loss, content_loss, style_loss], updates=param_updates)
 test_batch = K.function(inputs=[K.learning_phase(), test_input], outputs=[test_preds])
+
+param_updates_content = adam.get_updates(params=transform_model.trainable_weights, loss=content_loss)
+train_batch_content = K.function(inputs=[K.learning_phase(), content_input], outputs=[content_loss], updates=param_updates_content)
 
 X_test = np.array([get_image(args.test)])
 print(np.min(X_test), np.max(X_test))
@@ -229,6 +282,31 @@ print('Beginning!', len(content_targets) // batch_size, 'batches per epoch')
 train_phase = 1
 test_phase = 0
 begin_time = time.time()
+
+# TODO: First train transform model with only content loss to learn the identity mapping, then fine tune with the full loss function
+for iteration in range(1000):
+    start_time = time.time()
+    curr = iteration * batch_size
+    step = curr + batch_size
+    X_batch = np.zeros(batch_shape, dtype=np.float32)
+    for j, image in enumerate(content_targets[curr:step]):
+        X_batch[j] = get_image(image, (256,256,3)).astype(np.float32)
+    c_loss = train_batch_content([train_phase, X_batch])[0]
+    if debug:
+        print('Batch time: %.2f' % (time.time() - start_time), 'total time: %.2f' % (time.time() - begin_time), 'content:', c_loss)
+    # TODO: Save checkpoint and test image every args.checkpoint_iterations
+    if iteration % args.checkpoint_iterations == 0:
+        t = time.time()
+        transform_model.save(os.path.join(args.checkpoint_dir, os.path.splitext(os.path.basename(args.style))[0] + ('_content_%d.h5' % iteration)))
+        test_image = test_batch([test_phase, X_test])[0][0]# * 255.0
+        test_image = test_image.astype(int)
+        save_image(os.path.join(args.test_dir, os.path.splitext(os.path.basename(args.test))[0] + ('_content_%d.jpg' % iteration)), test_image)
+        print('Save test image time:', time.time() - t)
+
+
+# TODO: !! Incrementally increase the weight for the style loss. This is like curriculum learning
+
+
 for epoch in range(epochs):
     for iteration in range(len(content_targets) // batch_size):
         start_time = time.time()
@@ -237,11 +315,11 @@ for epoch in range(epochs):
         X_batch = np.zeros(batch_shape, dtype=np.float32)
         for j, image in enumerate(content_targets[curr:step]):
             X_batch[j] = get_image(image, (256,256,3)).astype(np.float32)
-        # batch_loss, c_loss, s_loss, t_loss = train_batch([train_phase, X_batch])
-        batch_loss, c_loss, s_loss = train_batch([train_phase, X_batch])
+        batch_loss, c_loss, s_loss, t_loss = train_batch([train_phase, X_batch])
+        # batch_loss, c_loss, s_loss = train_batch([train_phase, X_batch])
         if debug:
-            # print('Batch time: %.2f' % (time.time() - start_time), 'total time: %.2f' % (time.time() - begin_time), 'content:', c_loss, 'style:', s_loss, 'tv:', t_loss)
-            print('Batch time: %.2f' % (time.time() - start_time), 'total time: %.2f' % (time.time() - begin_time), 'content:', c_loss, 'style:', s_loss)
+            print('Batch time: %.2f' % (time.time() - start_time), 'total time: %.2f' % (time.time() - begin_time), 'content:', c_loss, 'style:', s_loss, 'tv:', t_loss)
+            # print('Batch time: %.2f' % (time.time() - start_time), 'total time: %.2f' % (time.time() - begin_time), 'content:', c_loss, 'style:', s_loss)
         # TODO: Save checkpoint and test image every args.checkpoint_iterations
         if iteration % args.checkpoint_iterations == 0:
             t = time.time()
